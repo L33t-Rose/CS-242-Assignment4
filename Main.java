@@ -1,7 +1,10 @@
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 
 // import javax.print.DocFlavor.INPUT_STREAM;
@@ -27,12 +30,19 @@ class Main {
                 return -1;
             }
             return 0;
+
+            // return (int) (this.distance - o.distance);
         }
 
         @Override
         public String toString() {
             // TODO Auto-generated method stub
-            return line + "|" + destination.toString();
+            return line + "|" + destination.toString() + "|" + distance;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return (this.distance == ((Edge) obj).distance) && this.destination.equals(((Edge) obj).destination);
         }
     }
 
@@ -70,21 +80,31 @@ class Main {
         return NYCSubwayMap;
     }
 
-    public static void sortStation(ArrayList<Station> a) {
-        for (int i = 0; i < 1; i++) {
-            int MIN_INDEX = i;
-            double minDistance = 0;
-            for (int j = i + 1; j < a.size() - 1; j++) {
-                // System.out.println(a.get(MIN_INDEX).compareTo(a.get(j)));
-                double distance = a.get(i).distanceBetween(a.get(j));
-                // if(distance - )
-            }
-            // Station temp = a.get(i);
-            // a.set(i, a.get(MIN_INDEX));
-            // a.set(MIN_INDEX, temp);
+    public static void listToJSON(HashMap<String, ArrayList<Edge>> list) {
+        File newFile = new File("subway.json");
+        try {
+            newFile.createNewFile();
+        } catch (IOException e) {
+            System.out.println(e);
         }
-        // System.out.println(a);
-        // return a;
+        try {
+            FileWriter json = new FileWriter(newFile);
+            StringBuilder output = new StringBuilder("{\n");
+            for (String key : list.keySet()) {
+                ArrayList<Edge> data = list.get(key);
+                output.append("\"" + key + "\":[");
+                for (Edge e : data) {
+                    output.append("\"" + e.toString() + "\",");
+                }
+                output.append("],\n");
+            }
+            output.append("}");
+            json.write(output.toString());
+            json.close();
+        } catch (IOException e) {
+            System.out.println(e);
+        }
+
     }
 
     public static void main(String[] args) {
@@ -112,74 +132,77 @@ class Main {
                 possibleLines.add(key);
             }
         }
-        System.out.println(possibleLines);
-        HashMap<Station, ArrayList<Edge>> adjacencyList = new HashMap<>();
+
+        HashMap<String, ArrayList<Edge>> adjacencyList = new HashMap<>();
 
         for (String line : subwayLineMap.keySet()) {
             ArrayList<Station> begin = subwayLineMap.get(line);
 
             System.out.println(begin.size());
-            // int middle = begin.size() / 2;
-            // Station s = begin.get(0);
-            // Station s = new Station("fuck this",0,0,"");
             for (int i = 0; i < begin.size(); i++) {
                 Station curr = begin.get(i);
-                double minDistance = Integer.MAX_VALUE;
-                // System.out.println(d);
-                Station possibleEnd = null;
+                PriorityQueue<Edge> distanceQueue = new PriorityQueue<Edge>();
+                // double minDistance = Integer.MAX_VALUE;
+                // Station possibleEnd = null;
 
                 for (int j = 0; j < begin.size(); j++) {
                     Station other = begin.get(j);
                     if (curr.name.equals(other.name)) {
                         continue;
                     }
-                    if (curr.distanceBetween(other) < minDistance) {
-                        minDistance = curr.distanceBetween(other);
-                        possibleEnd = other;
-                    }
+                    Edge neighbor = new Edge(curr.distanceBetween(other), line, other);
+                    distanceQueue.add(neighbor);
+                    // if (curr.distanceBetween(other) < minDistance) {
+                    // minDistance = curr.distanceBetween(other);
+                    // possibleEnd = other;
+                    // }
                 }
-                // System.out.println(d+", distance between: "+ );
-                System.out.println("Current Station: " + curr.name + "\nPossible End: " + possibleEnd.name);
-                Edge a = new Edge(minDistance,line,possibleEnd);
-                if(!adjacencyList.containsKey(curr)){
-                    adjacencyList.put(curr,new ArrayList<Edge>());
+                if(curr.name.equals("Wall St")
+                ){
+                    System.out.println(distanceQueue);
                 }
-                adjacencyList.get(curr).add(a);
+                Edge least = distanceQueue.poll();
+                Edge secondLeast = distanceQueue.poll();
+                System.out.println(least +"\n"+secondLeast);
+                while(!distanceQueue.isEmpty() && ((curr.longitude < least.destination.longitude && curr.longitude < secondLeast.destination.longitude) || (curr.longitude > least.destination.longitude && curr.longitude > secondLeast.destination.longitude))){
+                    secondLeast = distanceQueue.poll();
+                }
+                if (!adjacencyList.containsKey(curr.name)) {
+                    adjacencyList.put(curr.name, new ArrayList<Edge>());
+                }
+
+                adjacencyList.get(curr.name).add(least);
+                adjacencyList.get(curr.name).add(secondLeast);
+
+                // double secondLeast = minDistance;
+                // for()
+                // System.out.println("Current Station: " + curr.name + "\nPossible End: " +
+                // possibleEnd.name);
+                // Edge a = new Edge(minDistance, "2", possibleEnd);
+                // Edge b = new Edge(minDistance, "2", curr);
+                // if (!adjacencyList.containsKey(curr.name)) {
+                // adjacencyList.put(curr.name, new ArrayList<Edge>());
+                // }
+                // if (!adjacencyList.containsKey(possibleEnd.name)) {
+                // adjacencyList.put(possibleEnd.name, new ArrayList<Edge>());
+                // }
+                // if (!adjacencyList.get(curr.name).contains(a)) {
+                // adjacencyList.get(curr.name).add(a);
+                // }
+                // if (!adjacencyList.get(possibleEnd.name).contains(b)) {
+                // adjacencyList.get(possibleEnd.name).add(b);
+                // }
             }
         }
+
+        listToJSON(adjacencyList);
         System.out.println("J Train Lines");
-        
-        for(Station a:subwayLineMap.get("J")){
+
+        for (Station a : subwayLineMap.get("J")) {
             System.out.println(a);
         }
 
-        for(Station test: adjacencyList.keySet()){
-            System.out.println(test);
-            for(Edge e:adjacencyList.get(test)){
-                System.out.println(e);
-            }
-            System.out.println("---------------");
-        }
-        // Station fulton = subwayLineMap.get("5").get(41);
-        // for(Edge e:adjacencyList.get(fulton)){
-        //     System.out.println(e);
-        // }
-
-        // for()
-        // sortStation(a.get("7 Express"));
-        // for(String key: a.keySet() ){
-        // for(String line:a.get(key)){
-
-        // }
-        // System.out.println(line);
-        // // System.out.println(line+":"+Arrays.toString(a.get(line).toArray()));
-        // }
-        // for(String key: a.keySet()){
-        // System.out.println(key);
-        // for(Station line:a.get(key)){
-        // System.out.println(line);
-        // }
-        // System.out.println("---------------");
-        // }
+        System.out.println("Fulton St");
+        sc.close();
     }
 }
