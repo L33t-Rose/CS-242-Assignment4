@@ -96,7 +96,7 @@ class Main {
         }
     }
 
-    public static HashMap<String, String> dijkstra(String start, HashMap<String, ArrayList<Edge>> graph) {
+    public static HashMap<String, String> dijkstra(String start, String end, HashMap<String, ArrayList<Edge>> graph) {
         HashMap<String, Double> distanceMap = new HashMap<>();
         HashMap<String, String> parentMap = new HashMap<>();
         HashMap<String, Boolean> visitedMap = new HashMap<>();
@@ -142,6 +142,12 @@ class Main {
             }
             i++;
         }
+        double result = distanceMap.get(end);
+        int timeInMinutes = (int) result / 1;
+        int timeInSeconds = (int) (result % 1 * 60);
+
+        System.out.println(
+                "Time to get from " + start + " to " + end + ": " + timeInMinutes + "min " + timeInSeconds + "sec");
         return parentMap;
     }
 
@@ -261,7 +267,7 @@ class Main {
         }
 
         listToJSON(adjacencyList);
-        HashMap<String, String> output = dijkstra(start, adjacencyList);
+        HashMap<String, String> output = dijkstra(start, end, adjacencyList);
         System.out.println("Destination: " + end);
         String next = output.get(end);
         while (next != null) {
