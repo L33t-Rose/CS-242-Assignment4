@@ -1,4 +1,4 @@
-public class Station implements Comparable<Station> {
+public class Station{
     String name;
     double latitude;
     double longitude;
@@ -13,7 +13,6 @@ public class Station implements Comparable<Station> {
 
     @Override
     public String toString() {
-        // TODO Auto-generated method stub
         return name + "| (" + latitude + ", " + longitude + ")";
     }
 
@@ -36,12 +35,5 @@ public class Station implements Comparable<Station> {
 
     public double distanceBetween(Station other){
         return calculateDistance(latitude, longitude, other.latitude, other.longitude);
-    }
-
-    @Override
-    public int compareTo(Station o) {
-        // TODO Auto-generated method stub
-        // return (int)(this.longitude - o.longitude);
-        return 1;
     }
 }
