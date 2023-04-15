@@ -135,9 +135,15 @@ class Main {
             for (Edge neighbor : neighbors) {
                 // queue.add()
                 Double newDistance = distanceMap.get(current) + neighbor.distance;
+                int TimeToTransferInMinutes = 1;
+                if(parentMap.get(current) != null){
+                    if(!neighbor.destination.line.equals(parentMap.get(current).split(",")[1])){
+                        newDistance += TimeToTransferInMinutes;
+                    }
+                }
                 if (newDistance < distanceMap.get(neighbor.destination.name)) {
                     distanceMap.put(neighbor.destination.name, newDistance);
-                    parentMap.put(neighbor.destination.name,current+","+neighbor.line);
+                    parentMap.put(neighbor.destination.name, current + "," + neighbor.line);
                 }
                 if (!visitedMap.get(neighbor.destination.name)) {
                     neighbor.distance = newDistance;
@@ -157,8 +163,8 @@ class Main {
         System.out.println("done! Amount of things finished" + i);
         System.out.println("Expected amount: " + count);
         // for (String key : distanceMap.keySet()) {
-        //     System.out.print(key + "|");
-        //     System.out.print(distanceMap.get(key) + "\n");
+        // System.out.print(key + "|");
+        // System.out.print(distanceMap.get(key) + "\n");
         // }
         // System.out.println(distanceMap);
         // for(int i=0;i<count;i++){
@@ -229,6 +235,7 @@ class Main {
             for (Edge neighbor : graph.get(vertex)) {
                 // System.out.println("current line"+neighbor.line);
                 allVisited = allVisited && visited.contains(neighbor.destination.name);
+
                 if (!visited.contains(neighbor.destination.name)) {
                     s.add(neighbor.destination.name);
                 }
@@ -236,8 +243,7 @@ class Main {
             if (allVisited && vertex.equals(end)) {
                 paths.add(path);
                 // path = start;
-            }
-            else if(allVisited && !vertex.equals(end)){
+            } else if (allVisited && !vertex.equals(end)) {
                 path = start;
             }
         }
@@ -285,7 +291,9 @@ class Main {
                     if (curr.name.equals(other.name)) {
                         continue;
                     }
-                    Edge neighbor = new Edge(curr.distanceBetween(other), line, other);
+                    double AverageTrainSpeedInMetersPerMinute = 466.7098;
+                    Edge neighbor = new Edge(curr.distanceBetween(other) / AverageTrainSpeedInMetersPerMinute, line,
+                            other);
                     distanceQueue.add(neighbor);
                 }
                 // if (curr.name.equals("Wall St")) {
@@ -327,15 +335,18 @@ class Main {
         listToJSON(adjacencyList);
         // System.out.println("J Train Lines");
 
-        HashMap<String,String> output = dijkstra(start, adjacencyList);
+        HashMap<String, String> output = dijkstra(start, adjacencyList);
         // System.out.println(output);
         // for(String key:output.keySet()){
-        //     System.out.println(key+":"+output.get(key));
+        // System.out.println(key+":"+output.get(key));
         // }
+        System.out.println("Destination: " + end);
         String next = output.get(end);
-        System.out.println(Arrays.toString(next.split(",")));
-        while(next != null){
-            System.out.println(output.get(next.split(",")[0]));
+
+        // System.out.println(Arrays.toString(next.split(",")));
+        while (next != null) {
+            System.out.println(next);
+            // System.out.println(output.get(next.split(",")[0]));
             next = output.get(next.split(",")[0]);
         }
         // startDFS(start,end, adjacencyList);
