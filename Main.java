@@ -5,10 +5,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 import java.util.Stack;
+
 
 // import javax.print.DocFlavor.INPUT_STREAM;
 
@@ -51,7 +51,6 @@ class Main {
 
     // Key- line; V-
     public static HashMap<String, ArrayList<Station>> readFromCSV() {
-        System.out.println("Running");
         Scanner sc = null;
         try {
             sc = new Scanner(new File("mta_stations.csv"));
@@ -59,7 +58,6 @@ class Main {
             System.out.println(e.toString());
             return null;
         }
-        System.out.println("here");
         HashMap<String, ArrayList<Station>> NYCSubwayMap = new HashMap<String, ArrayList<Station>>();
         sc.nextLine();
         while (sc.hasNextLine()) {
@@ -71,7 +69,6 @@ class Main {
             String stationLines = data[4];
             Station stat = new Station(name, latitute, longitude, stationLines);
             String[] lines = data[4].split("-");
-            System.out.println(Arrays.toString(lines));
             for (String line : lines) {
                 if (!NYCSubwayMap.containsKey(line)) {
                     NYCSubwayMap.put(line, new ArrayList<Station>());
@@ -127,7 +124,6 @@ class Main {
         PriorityQueue<Edge> queue = new PriorityQueue<Edge>();
         // queue.add(new Edge(0.0,"",))
         while (true) {
-            System.out.println(current);
             if (i > count) {
                 break;
             }
@@ -160,8 +156,6 @@ class Main {
             }
             i++;
         }
-        System.out.println("done! Amount of things finished" + i);
-        System.out.println("Expected amount: " + count);
         // for (String key : distanceMap.keySet()) {
         // System.out.print(key + "|");
         // System.out.print(distanceMap.get(key) + "\n");
@@ -250,32 +244,54 @@ class Main {
         System.out.println(Arrays.toString(paths.toArray()));
     }
 
-    public static void main(String[] args) {
-        HashMap<String, ArrayList<Station>> subwayLineMap = readFromCSV();
-        Scanner sc = new Scanner(System.in);
-        System.out.println("Enter Station You're Starting At");
-        String start = sc.nextLine();
-        System.out.println("Enter Destination");
-        String end = sc.nextLine();
-        if (start.equals(end)) {
-            System.out.println("this is the same station");
-        }
-
-        ArrayList<String> possibleLines = new ArrayList<String>();
-        for (String key : subwayLineMap.keySet()) {
-            ArrayList<Station> line = subwayLineMap.get(key);
-            // if(line.contains(end))
-            int count = 0;
-            for (Station s : line) {
-                if (s.name.equals(start) || s.name.equals(end)) {
-                    count++;
+    public static String getInput(Scanner sc,HashMap<String, ArrayList<Edge>> subwayLineMap, String message){
+        boolean validInput = false;
+        String input = "";
+        do {
+            try{
+                System.out.println(message);
+                input = sc.nextLine();
+                if(!subwayLineMap.containsKey(input)){
+                    throw new Exception();
+                }
+                validInput = true;
+            }catch(Exception e){
+                System.out.println("That's not a real station! Try Again!");
+                validInput = false;
+                ArrayList<String> possibleStations = new ArrayList<String>();
+                for(String station:subwayLineMap.keySet()){
+                    if(station.toLowerCase().indexOf(input.toLowerCase()) != -1){
+                        possibleStations.add(station);
+                    }
+                }
+                if(possibleStations.size() != 0){
+                    System.out.println("Here are all the possible stations for you to select from!");
+                    // System.out.println(Arrays.toString(possibleStations.toArray()));
+                    for(int i=0;i<possibleStations.size();i++){
+                        System.out.println(i+1+": " + possibleStations.get(i));
+                    }
+                    int index = 0;
+                    do{
+                        System.out.println("Please choose a number corresponding to the station you want to start at");
+                        try{
+                            index = sc.nextInt()-1;
+                        }catch(Exception a){
+                            System.out.println("Not a valid number!");
+                            index = -1;
+                            sc.nextLine();
+                        }
+                    }while(index <0 || index > possibleStations.size());
+                    input = possibleStations.get(index);
+                    validInput = true;
                 }
             }
-            if (count == 2) {
-                possibleLines.add(key);
-            }
-        }
+        } while (!validInput);
+        sc.nextLine();
+        return input;
+    }
 
+    public static void main(String[] args) {
+        HashMap<String, ArrayList<Station>> subwayLineMap = readFromCSV();
         HashMap<String, ArrayList<Edge>> adjacencyList = new HashMap<>();
 
         for (String line : subwayLineMap.keySet()) {
@@ -296,20 +312,9 @@ class Main {
                             other);
                     distanceQueue.add(neighbor);
                 }
-                // if (curr.name.equals("Wall St")) {
-                // System.out.println(distanceQueue);
-                // }
+
                 Edge least = distanceQueue.poll();
                 Edge secondLeast = distanceQueue.poll();
-                // System.out.println(least + "\n" + secondLeast);
-                // Shifting our second least until it's below our current
-                // while (!distanceQueue.isEmpty() && ((curr.latitude <
-                // least.destination.latitude
-                // && curr.latitude < secondLeast.destination.latitude)
-                // || (curr.latitude > least.destination.latitude
-                // && curr.latitude > secondLeast.destination.latitude))) {
-                // secondLeast = distanceQueue.poll();
-                // }
 
                 while (!distanceQueue.isEmpty()) {
                     boolean incorrectOption1 = curr.latitude < secondLeast.destination.latitude
@@ -331,6 +336,33 @@ class Main {
                 }
             }
         }
+
+        Scanner sc = new Scanner(System.in);
+        String start = getInput(sc,adjacencyList,"Enter What Station You're Starting At:");
+        String end = getInput(sc,adjacencyList,"Enter Your Destination:");
+        System.out.println("Selected Your Beginning Station To Be: "+start);
+        System.out.println("Selected Your Destination Station To Be: "+end);
+
+
+        if (start.equals(end)) {
+            System.out.println("this is the same station");
+        }
+
+        ArrayList<String> possibleLines = new ArrayList<String>();
+        for (String key : subwayLineMap.keySet()) {
+            ArrayList<Station> line = subwayLineMap.get(key);
+            int count = 0;
+            for (Station s : line) {
+                if (s.name.equals(start) || s.name.equals(end)) {
+                    count++;
+                }
+            }
+            if (count == 2) {
+                possibleLines.add(key);
+            }
+        }
+
+        
 
         listToJSON(adjacencyList);
         // System.out.println("J Train Lines");
