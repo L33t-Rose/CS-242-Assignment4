@@ -4,8 +4,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.PriorityQueue;
 import java.util.Scanner;
+import java.util.Stack;
 
 // import javax.print.DocFlavor.INPUT_STREAM;
 
@@ -63,8 +66,8 @@ class Main {
             String[] data = sc.nextLine().split(",");
             String name = data[2];
             String[] coordinate = data[3].replaceAll("POINT ", "").replace("(", "").replace(")", "").split(" ");
-            double latitute = Double.parseDouble(coordinate[0]);
-            double longitude = Double.parseDouble(coordinate[1]);
+            double latitute = Double.parseDouble(coordinate[1]);
+            double longitude = Double.parseDouble(coordinate[0]);
             String stationLines = data[4];
             Station stat = new Station(name, latitute, longitude, stationLines);
             String[] lines = data[4].split("-");
@@ -107,6 +110,140 @@ class Main {
 
     }
 
+    public static HashMap<String, String> dijkstra(String start, HashMap<String, ArrayList<Edge>> graph) {
+        // HashSet
+        HashMap<String, Double> distanceMap = new HashMap<>();
+        HashMap<String, String> parentMap = new HashMap<>();
+        HashMap<String, Boolean> visitedMap = new HashMap<>();
+
+        for (String key : graph.keySet()) {
+            distanceMap.put(key, Double.MAX_VALUE);
+            visitedMap.put(key, false);
+        }
+        distanceMap.put(start, 0.0);
+        String current = start;
+        int count = graph.keySet().size();
+        int i = 0;
+        PriorityQueue<Edge> queue = new PriorityQueue<Edge>();
+        // queue.add(new Edge(0.0,"",))
+        while (true) {
+            System.out.println(current);
+            if (i > count) {
+                break;
+            }
+            ArrayList<Edge> neighbors = graph.get(current);
+            for (Edge neighbor : neighbors) {
+                // queue.add()
+                Double newDistance = distanceMap.get(current) + neighbor.distance;
+                if (newDistance < distanceMap.get(neighbor.destination.name)) {
+                    distanceMap.put(neighbor.destination.name, newDistance);
+                    parentMap.put(neighbor.destination.name,current+","+neighbor.line);
+                }
+                if (!visitedMap.get(neighbor.destination.name)) {
+                    neighbor.distance = newDistance;
+                    queue.add(neighbor);
+                }
+            }
+            visitedMap.put(current, true);
+            if (queue.isEmpty()) {
+                break;
+            }
+            current = queue.poll().destination.name;
+            while (!queue.isEmpty() && visitedMap.get(current)) {
+                current = queue.poll().destination.name;
+            }
+            i++;
+        }
+        System.out.println("done! Amount of things finished" + i);
+        System.out.println("Expected amount: " + count);
+        // for (String key : distanceMap.keySet()) {
+        //     System.out.print(key + "|");
+        //     System.out.print(distanceMap.get(key) + "\n");
+        // }
+        // System.out.println(distanceMap);
+        // for(int i=0;i<count;i++){
+
+        // }
+        return parentMap;
+    }
+
+    // public static void startDFS(String start, String end, HashMap<String,
+    // ArrayList<Edge>> graph) {
+    // HashSet<String> visited = new HashSet<>();
+    // visited.add(start);
+    // String path = start;
+    // path += "->" +dfs(start, end, graph, visited,path);
+    // System.out.println("Resulting Path: " +path);
+    // }
+
+    // public static String dfs(String current, String end,
+    // HashMap<String,ArrayList<Edge>> graph, HashSet<String> visited,String path){
+    // if(current.equals(end)){
+    // return end;
+    // }
+    // for(Edge neighbor:graph.get(current)){
+    // // return dfs(neighbor.destination.)
+    // if(!visited.contains(neighbor.destination.name)){
+    // path += "->" + neighbor.destination.name + "->" +
+    // dfs(neighbor.destination.name,end,graph,visited,path);
+    // }
+    // }
+    // return path;
+    // for()
+    // HashSet<String> visited = new HashSet<String>();
+    // Stack<String> s = new Stack<String>();
+    // HashMap<String,LinkedList<String>> a = new HashMap<>();
+    // for(){
+    // s
+    // }
+    // a.put()
+    // s.add(start);
+
+    // while(!s.isEmpty()){
+    // String vertex = s.pop();
+    // // Process this somehow
+    // System.out.println(vertex);
+    // visited.add(vertex);
+    // for(Edge neighbor:graph.get(vertex)){
+    // System.out.println("current line"+neighbor.line);
+    // if(!visited.contains(neighbor.destination.name)){
+    // s.add(neighbor.destination.name);
+    // }
+    // }
+    // }
+    // }
+
+    public static void dfs(String start, String end, HashMap<String, ArrayList<Edge>> graph) {
+        HashSet<String> visited = new HashSet<String>();
+        Stack<String> s = new Stack<String>();
+        s.add(start);
+        ArrayList<String> paths = new ArrayList<String>();
+        String path = "";
+        while (!s.isEmpty()) {
+            String vertex = s.pop();
+            // Process this somehow
+            // System.out.println(vertex);
+            path += "\n" + vertex;
+            visited.add(vertex);
+            boolean allVisited = true;
+            for (Edge neighbor : graph.get(vertex)) {
+                // System.out.println("current line"+neighbor.line);
+                allVisited = allVisited && visited.contains(neighbor.destination.name);
+                if (!visited.contains(neighbor.destination.name)) {
+                    s.add(neighbor.destination.name);
+                }
+            }
+            if (allVisited && vertex.equals(end)) {
+                paths.add(path);
+                // path = start;
+            }
+            else if(allVisited && !vertex.equals(end)){
+                path = start;
+            }
+        }
+        System.out.println(Arrays.toString(paths.toArray()));
+    }
+
     public static void main(String[] args) {
         HashMap<String, ArrayList<Station>> subwayLineMap = readFromCSV();
         Scanner sc = new Scanner(System.in);
@@ -138,12 +275,10 @@ class Main {
         for (String line : subwayLineMap.keySet()) {
             ArrayList<Station> begin = subwayLineMap.get(line);
 
-            System.out.println(begin.size());
+            // System.out.println(begin.size());
             for (int i = 0; i < begin.size(); i++) {
                 Station curr = begin.get(i);
                 PriorityQueue<Edge> distanceQueue = new PriorityQueue<Edge>();
-                // double minDistance = Integer.MAX_VALUE;
-                // Station possibleEnd = null;
 
                 for (int j = 0; j < begin.size(); j++) {
                     Station other = begin.get(j);
@@ -152,57 +287,59 @@ class Main {
                     }
                     Edge neighbor = new Edge(curr.distanceBetween(other), line, other);
                     distanceQueue.add(neighbor);
-                    // if (curr.distanceBetween(other) < minDistance) {
-                    // minDistance = curr.distanceBetween(other);
-                    // possibleEnd = other;
-                    // }
                 }
-                if(curr.name.equals("Wall St")
-                ){
-                    System.out.println(distanceQueue);
-                }
+                // if (curr.name.equals("Wall St")) {
+                // System.out.println(distanceQueue);
+                // }
                 Edge least = distanceQueue.poll();
                 Edge secondLeast = distanceQueue.poll();
-                System.out.println(least +"\n"+secondLeast);
-                while(!distanceQueue.isEmpty() && ((curr.longitude < least.destination.longitude && curr.longitude < secondLeast.destination.longitude) || (curr.longitude > least.destination.longitude && curr.longitude > secondLeast.destination.longitude))){
+                // System.out.println(least + "\n" + secondLeast);
+                // Shifting our second least until it's below our current
+                // while (!distanceQueue.isEmpty() && ((curr.latitude <
+                // least.destination.latitude
+                // && curr.latitude < secondLeast.destination.latitude)
+                // || (curr.latitude > least.destination.latitude
+                // && curr.latitude > secondLeast.destination.latitude))) {
+                // secondLeast = distanceQueue.poll();
+                // }
+
+                while (!distanceQueue.isEmpty()) {
+                    boolean incorrectOption1 = curr.latitude < secondLeast.destination.latitude
+                            && curr.latitude < least.destination.latitude;
+                    boolean incorrectOption2 = curr.latitude > secondLeast.destination.latitude
+                            && curr.latitude > least.destination.latitude;
+                    // System.out.println(incorrectOption1 || incorrectOption2);
+                    if (!(incorrectOption1 || incorrectOption2)) {
+                        break;
+                    }
                     secondLeast = distanceQueue.poll();
                 }
                 if (!adjacencyList.containsKey(curr.name)) {
                     adjacencyList.put(curr.name, new ArrayList<Edge>());
                 }
-
                 adjacencyList.get(curr.name).add(least);
-                adjacencyList.get(curr.name).add(secondLeast);
-
-                // double secondLeast = minDistance;
-                // for()
-                // System.out.println("Current Station: " + curr.name + "\nPossible End: " +
-                // possibleEnd.name);
-                // Edge a = new Edge(minDistance, "2", possibleEnd);
-                // Edge b = new Edge(minDistance, "2", curr);
-                // if (!adjacencyList.containsKey(curr.name)) {
-                // adjacencyList.put(curr.name, new ArrayList<Edge>());
-                // }
-                // if (!adjacencyList.containsKey(possibleEnd.name)) {
-                // adjacencyList.put(possibleEnd.name, new ArrayList<Edge>());
-                // }
-                // if (!adjacencyList.get(curr.name).contains(a)) {
-                // adjacencyList.get(curr.name).add(a);
-                // }
-                // if (!adjacencyList.get(possibleEnd.name).contains(b)) {
-                // adjacencyList.get(possibleEnd.name).add(b);
-                // }
+                if (!distanceQueue.isEmpty()) {
+                    adjacencyList.get(curr.name).add(secondLeast);
+                }
             }
         }
 
         listToJSON(adjacencyList);
-        System.out.println("J Train Lines");
+        // System.out.println("J Train Lines");
 
-        for (Station a : subwayLineMap.get("J")) {
-            System.out.println(a);
+        HashMap<String,String> output = dijkstra(start, adjacencyList);
+        // System.out.println(output);
+        // for(String key:output.keySet()){
+        //     System.out.println(key+":"+output.get(key));
+        // }
+        String next = output.get(end);
+        System.out.println(Arrays.toString(next.split(",")));
+        while(next != null){
+            System.out.println(output.get(next.split(",")[0]));
+            next = output.get(next.split(",")[0]);
         }
-
-        System.out.println("Fulton St");
+        // startDFS(start,end, adjacencyList);
+        // dfs(start, end, adjacencyList);
         sc.close();
     }
 }
