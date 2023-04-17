@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Scanner;
@@ -142,6 +143,7 @@ class Main {
             }
             i++;
         }
+        // parentMap.put(start,start);
         double result = distanceMap.get(end);
         int timeInMinutes = (int) result / 1;
         int timeInSeconds = (int) (result % 1 * 60);
@@ -149,6 +151,18 @@ class Main {
         System.out.println(
                 "Time to get from " + start + " to " + end + ": " + timeInMinutes + "min " + timeInSeconds + "sec");
         return parentMap;
+    }
+
+    public static void printPath(String end,HashMap<String,String> parentMap){
+        if(end == parentMap.get(end)){
+            return;
+        }
+        // System.out.println(end);
+        // String[] next = parentMap.get(end).split(",");
+        printPath(parentMap.get(end).split(",")[0],parentMap);
+        // System.out.println(next);
+        System.out.println(end);
+        // return end;
     }
 
     public static String getInput(Scanner sc, HashMap<String, ArrayList<Edge>> subwayLineMap, String message) {
@@ -213,6 +227,12 @@ class Main {
                     if (curr.name.equals(other.name)) {
                         continue;
                     }
+                    // Idea is that if we have speed and distance than we get time by dividing
+                    // distance / speed. -> speed = distance / time. 
+                    // Solving for time our equation is time = distance / speed
+                    // A search online shows that the verage train speed is 17.4 miles per four
+                    // We'll change up that figure to be meters per minute since we assume it takes ~1 minute
+                    // to transfer
                     double AverageTrainSpeedInMetersPerMinute = 466.7098;
                     Edge neighbor = new Edge(curr.distanceBetween(other) / AverageTrainSpeedInMetersPerMinute, line,
                             other);
@@ -265,15 +285,30 @@ class Main {
                 possibleLines.add(key);
             }
         }
-
+        
         listToJSON(adjacencyList);
         HashMap<String, String> output = dijkstra(start, end, adjacencyList);
-        System.out.println("Destination: " + end);
+        // printPath(end, output);
+        ArrayList<String> path = new ArrayList<>();
+
         String next = output.get(end);
         while (next != null) {
-            System.out.println(next);
+            path.add(next);
             next = output.get(next.split(",")[0]);
         }
+        Collections.reverse(path);
+        for(String i:path){
+            String[] info = i.split(",");
+            if(info.length == 2){
+                System.out.print("From "+info[0]+" ");
+                System.out.print("Take the "+info[1]+" train\n|\nv\n");
+            }else{
+                System.out.println("You've arrived at your destination: "+info[0]);
+            }
+
+            // System.out.println(i);
+        }
+        System.out.println(end);
         sc.close();
     }
 }
