@@ -119,6 +119,7 @@ class Main {
             for (Edge neighbor : neighbors) {
                 Double newDistance = distanceMap.get(current) + neighbor.distance;
                 int TimeToTransferInMinutes = 1;
+                // If we are switching lines then add a minute to our tentative time
                 if (parentMap.get(current) != null) {
                     if (!neighbor.destination.line.equals(parentMap.get(current).split(",")[1])) {
                         newDistance += TimeToTransferInMinutes;
@@ -143,7 +144,6 @@ class Main {
             }
             i++;
         }
-        // parentMap.put(start,start);
         double result = distanceMap.get(end);
         int timeInMinutes = (int) result / 1;
         int timeInSeconds = (int) (result % 1 * 60);
@@ -153,17 +153,6 @@ class Main {
         return parentMap;
     }
 
-    public static void printPath(String end,HashMap<String,String> parentMap){
-        if(end == parentMap.get(end)){
-            return;
-        }
-        // System.out.println(end);
-        // String[] next = parentMap.get(end).split(",");
-        printPath(parentMap.get(end).split(",")[0],parentMap);
-        // System.out.println(next);
-        System.out.println(end);
-        // return end;
-    }
 
     public static String getInput(Scanner sc, HashMap<String, ArrayList<Edge>> subwayLineMap, String message) {
         boolean validInput = false;
@@ -187,7 +176,6 @@ class Main {
                 }
                 if (possibleStations.size() != 0) {
                     System.out.println("Here are all the possible stations for you to select from!");
-                    // System.out.println(Arrays.toString(possibleStations.toArray()));
                     for (int i = 0; i < possibleStations.size(); i++) {
                         System.out.println(i + 1 + ": " + possibleStations.get(i));
                     }
@@ -199,7 +187,7 @@ class Main {
                         } catch (Exception a) {
                             System.out.println("Not a valid number!");
                             index = -1;
-                            sc.nextLine();
+                            sc.next();
                         }
                     } while (index < 0 || index > possibleStations.size());
                     input = possibleStations.get(index);
@@ -207,7 +195,6 @@ class Main {
                 }
             }
         } while (!validInput);
-        sc.nextLine();
         return input;
     }
 
@@ -288,7 +275,6 @@ class Main {
         
         listToJSON(adjacencyList);
         HashMap<String, String> output = dijkstra(start, end, adjacencyList);
-        // printPath(end, output);
         ArrayList<String> path = new ArrayList<>();
 
         String next = output.get(end);
@@ -305,8 +291,6 @@ class Main {
             }else{
                 System.out.println("You've arrived at your destination: "+info[0]);
             }
-
-            // System.out.println(i);
         }
         System.out.println(end);
         sc.close();
